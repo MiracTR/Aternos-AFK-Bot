@@ -1,5 +1,5 @@
 {
-  "name": "AFK Bot",
+  "name": "Daçka AFK",
   "bot-account": {
     "username": "AFKBot",
     "password": "",
@@ -8,11 +8,11 @@
   "server": {
     "ip": "dackasmp.aternos.me",
     "port": 25565,
-    "version": "1.21.11",
+    "version": "",
     "try-creative": false
   },
   "position": {
-    "enabled": false,
+    "enabled": true,
     "x": 0,
     "y": 100,
     "z": 0
@@ -28,40 +28,38 @@
     },
     "chat-messages": {
       "enabled": false,
-      "repeat": true,
-      "repeat-delay": 120,
+      "repeat": false,
+      "repeat-delay": 300,
       "messages": [
-        "I'm a regular player",
-        "Subscribe to Slobos!",
-        "I like to play Minecraft!"
+        "AFK"
       ]
     },
     "chat-log": true,
     "auto-reconnect": true,
-    "auto-reconnect-delay": 2000,
-    "max-reconnect-delay": 120000
+    "auto-reconnect-delay": 5000,
+    "max-reconnect-delay": 60000
   },
   "movement": {
     "enabled": true,
     "circle-walk": {
       "enabled": false,
-      "radius": 4,
-      "speed": 3000
+      "radius": 3,
+      "speed": 5000
     },
     "look-around": {
       "enabled": true,
-      "interval": 5000
+      "interval": 15000
     },
     "random-jump": {
       "enabled": false,
-      "interval": 10000
+      "interval": 30000
     }
   },
   "modules": {
     "avoidMobs": true,
     "combat": false,
     "beds": false,
-    "chat": true,
+    "chat": false,
     "console-commands": true
   },
   "combat": {
@@ -74,7 +72,7 @@
   },
   "discord": {
     "enabled": false,
-    "webhookUrl": "YOUR_DISCORD_WEBHOOK_URL_HERE",
+    "webhookUrl": "",
     "events": {
       "connect": true,
       "disconnect": true,
@@ -82,6 +80,6 @@
     }
   },
   "chat": {
-    "respond": true
+    "respond": false
   }
 }
