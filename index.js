@@ -74,8 +74,10 @@ function createBot() {
     // ================= SPAWN =================
     bot.once("spawn", () => {
         addLog("Spawned!");
-
         reconnectAttempts = 0;
+
+        // Başlangıç yüksekliğini düşüş kontrolü için kaydediyoruz
+        const startY = bot.entity.position.y;
 
         // 🏠 AFK'ya git
         setTimeout(() => {
@@ -88,40 +90,27 @@ function createBot() {
             addLog("→ /home afk");
         }, 6000);
 
-        // 🌊 AFK HAVUZU
+        // 🌊 SU VE NEFES KONTROLÜ (Tek bir çatı altında birleştirildi, çakışma önlendi)
         addInterval(() => {
             if (!bot.entity) return;
 
             if (bot.entity.isInWater || bot.entity.isInLava) {
-                bot.setControlState("jump", true);
+                // Eğer oksijen kritik seviyedeyse veya suyun altındaysa zıpla
+                if (bot.oxygenLevel < 200 || bot.entity.position.y % 1 < 0.5) {
+                    bot.setControlState("jump", true);
+                } else {
+                    bot.setControlState("jump", false);
+                }
             } else {
                 bot.setControlState("jump", false);
             }
-        }, 200);
+        }, 500); // Paket şişmesi olmaması için 500ms idealdir
 
-        // 🫁 BOĞULMA ENGELLEME
-        addInterval(() => {
-            if (!bot.entity || !bot.entity.isInWater) return;
-
-            if (bot.oxygenLevel < 200) {
-                bot.setControlState("jump", true);
-            }
-        }, 200);
-
-        // 🧊 SUDA HAREKETİ DURDUR
+        // 📉 DÜŞME KORUMA (Doğru Y koordinat kontrolü ile)
         addInterval(() => {
             if (!bot.entity) return;
 
-            if (bot.entity.isInWater) {
-                bot.clearControlStates();
-            }
-        }, 500);
-
-        // 📉 DÜŞME KORUMA
-        addInterval(() => {
-            if (!bot.entity || !bot.spawnPoint) return;
-
-            if (bot.entity.position.y < bot.spawnPoint.y - 10) {
+            if (bot.entity.position.y < startY - 15) {
                 addLog("Fall detected → /home afk");
                 bot.chat("/home afk");
             }
@@ -147,21 +136,30 @@ function createBot() {
             addLog("Chunks loaded");
         });
 
-        // 🧠 STUCK DETECT
-        let lastMove = Date.now();
-
-        bot.on("move", () => {
-            lastMove = Date.now();
-        });
+        // 🧠 HAREKETSİZLİK (STUCK) KONTROLÜ (Doğrudan pozisyon tabanlı kontrol)
+        let lastPos = null;
+        let lastMoveTime = Date.now();
 
         addInterval(() => {
             if (!bot.entity) return;
 
-            if (!bot.entity.isInWater && Date.now() - lastMove > 300000) {
-                addLog("Bot stuck → restarting");
+            const currentPos = bot.entity.position;
+            
+            if (lastPos) {
+                // Eğer bot son 5 dakikadır 1 blok bile hareket etmediyse restart at
+                const dist = currentPos.distanceTo(lastPos);
+                if (dist > 1) {
+                    lastMoveTime = Date.now();
+                }
+            }
+            
+            lastPos = currentPos.clone();
+
+            if (Date.now() - lastMoveTime > 300000) { // 5 Dakika
+                addLog("Bot frozen/stuck for too long → restarting");
                 bot.end();
             }
-        }, 60000);
+        }, 30000); // 30 saniyede bir kontrol eder
     });
 
     // ================= KICK =================
@@ -171,7 +169,6 @@ function createBot() {
 
         addLog(`Kicked: ${msg}`);
 
-        // 🚀 SERVER FULL FIX
         if (/full|dolu|queue/i.test(reasonStr)) {
             addLog("Server full → waiting 30s...");
             isReconnecting = true;
